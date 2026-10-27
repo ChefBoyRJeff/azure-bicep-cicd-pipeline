@@ -1,0 +1,16 @@
+# Compiled ARM output (generated from Bicep in CI; never committed)
+*.json
+!bicepconfig.json
+
+# Local overrides (never committed)
+*.local.bicepparam
+.env
+
+# Unsanitized screenshots: save originals here, commit only sanitized copies in docs/screenshots/
+docs/screenshots/raw/
+
+# OS and editor clutter
+.DS_Store
+Thumbs.db
+.vscode/
+.venv/

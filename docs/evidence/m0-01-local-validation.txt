@@ -1,0 +1,8 @@
+M0 local validation, 2026-10-26 22:00:50 local; Bicep CLI version 0.48.1 (cec7951cf6)  
+=== lint main.bicep ===
+
+exit=0
+=== build-params dev ===
+exit=0
+=== build-params prod ===
+exit=0
