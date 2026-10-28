@@ -1,0 +1,40 @@
+Initialize-PipelineIdentity step All, 2026-10-27 20:21:31 local, subscription 'AZ104_PracticeSubscription', repo ChefBoyRJeff/azure-bicep-cicd-pipeline
+=== Step 1: resource groups ===
+  exists   rg-cicd-dev
+  exists   rg-cicd-prod
+=== Step 2: custom role 'Bicep What-If Reader' ===
+  exists   (no change made)
+=== Step 3: app registrations and service principals (no secrets) ===
+  exists   app gh-cicd-plan
+  exists   service principal gh-cicd-plan
+  exists   app gh-cicd-deploy-dev
+  exists   service principal gh-cicd-deploy-dev
+  exists   app gh-cicd-deploy-prod
+  exists   service principal gh-cicd-deploy-prod
+=== Step 4: federated credentials (GitHub OIDC) ===
+  exists   gh-cicd-plan  <-  repo:ChefBoyRJeff/azure-bicep-cicd-pipeline:pull_request
+  exists   gh-cicd-deploy-dev  <-  repo:ChefBoyRJeff/azure-bicep-cicd-pipeline:environment:dev
+  exists   gh-cicd-deploy-prod  <-  repo:ChefBoyRJeff/azure-bicep-cicd-pipeline:environment:prod
+=== Step 5: role assignments (resource-group scope only) ===
+  exists   gh-cicd-plan  ->  Bicep What-If Reader @ rg-cicd-dev
+  exists   gh-cicd-plan  ->  Bicep What-If Reader @ rg-cicd-prod
+  exists   gh-cicd-deploy-dev  ->  Contributor @ rg-cicd-dev
+  exists   gh-cicd-deploy-prod  ->  Contributor @ rg-cicd-prod
+=== Step 6: verification (read-only) ===
+--- Secrets and certificates per app (expect 0 and 0) ---
+  gh-cicd-plan         secrets=0  certificates=0
+  gh-cicd-deploy-dev   secrets=0  certificates=0
+  gh-cicd-deploy-prod  secrets=0  certificates=0
+--- Federated credentials (issuer | subject | audience) ---
+  gh-cicd-plan         https://token.actions.githubusercontent.com | repo:ChefBoyRJeff/azure-bicep-cicd-pipeline:pull_request | api://AzureADTokenExchange
+  gh-cicd-deploy-dev   https://token.actions.githubusercontent.com | repo:ChefBoyRJeff/azure-bicep-cicd-pipeline:environment:dev | api://AzureADTokenExchange
+  gh-cicd-deploy-prod  https://token.actions.githubusercontent.com | repo:ChefBoyRJeff/azure-bicep-cicd-pipeline:environment:prod | api://AzureADTokenExchange
+--- Role assignments for each identity, all scopes (expect resource groups only) ---
+  gh-cicd-plan         Bicep What-If Reader   @ resource group rg-cicd-dev
+  gh-cicd-plan         Bicep What-If Reader   @ resource group rg-cicd-prod
+  gh-cicd-deploy-dev   Contributor            @ resource group rg-cicd-dev
+  gh-cicd-deploy-prod  Contributor            @ resource group rg-cicd-prod
+--- Custom role 'Bicep What-If Reader' ---
+  actions: */read, Microsoft.Resources/deployments/whatIf/action, Microsoft.Resources/deployments/validate/action
+  assignable scopes: rg-cicd-dev, rg-cicd-prod
+Done.

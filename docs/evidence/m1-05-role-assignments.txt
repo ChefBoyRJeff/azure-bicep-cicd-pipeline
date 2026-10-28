@@ -1,0 +1,7 @@
+Initialize-PipelineIdentity step 5, 2026-10-27 20:20:03 local, subscription 'AZ104_PracticeSubscription', repo ChefBoyRJeff/azure-bicep-cicd-pipeline
+=== Step 5: role assignments (resource-group scope only) ===
+  created  gh-cicd-plan  ->  Bicep What-If Reader @ rg-cicd-dev
+  created  gh-cicd-plan  ->  Bicep What-If Reader @ rg-cicd-prod
+  created  gh-cicd-deploy-dev  ->  Contributor @ rg-cicd-dev
+  created  gh-cicd-deploy-prod  ->  Contributor @ rg-cicd-prod
+Done.

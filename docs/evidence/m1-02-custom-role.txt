@@ -1,0 +1,4 @@
+Initialize-PipelineIdentity step 2, 2026-10-27 20:17:47 local, subscription 'AZ104_PracticeSubscription', repo ChefBoyRJeff/azure-bicep-cicd-pipeline
+=== Step 2: custom role 'Bicep What-If Reader' ===
+  created  (assignable at rg-cicd-dev and rg-cicd-prod only)
+Done.

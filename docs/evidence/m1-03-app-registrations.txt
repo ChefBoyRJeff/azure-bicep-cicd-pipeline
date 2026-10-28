@@ -1,0 +1,9 @@
+Initialize-PipelineIdentity step 3, 2026-10-27 20:17:52 local, subscription 'AZ104_PracticeSubscription', repo ChefBoyRJeff/azure-bicep-cicd-pipeline
+=== Step 3: app registrations and service principals (no secrets) ===
+  created  app gh-cicd-plan
+  created  service principal gh-cicd-plan
+  created  app gh-cicd-deploy-dev
+  created  service principal gh-cicd-deploy-dev
+  created  app gh-cicd-deploy-prod
+  created  service principal gh-cicd-deploy-prod
+Done.
