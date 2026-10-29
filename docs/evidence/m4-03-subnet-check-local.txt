@@ -7,8 +7,14 @@
   PASS  all subnets inside the VNet, no overlaps
 Subnet layout check passed.
 exit=0
-=== M4b copy-paste error replayed in a temporary file (expect FAIL) ===
+=== M4b copy-paste error replayed in a temporary file (expect FAIL on overlap) ===
+  temp file: addressPrefix: '10.40.1.0/24'
+  temp file: destinationAddressPrefix: '10.40.1.0/24'
+  temp file: addressPrefix: '10.40.1.0/24'
+  temp file: sourceAddressPrefix: '10.40.1.0/24'
+  temp file: destinationAddressPrefix: '10.40.2.0/24'
 === infra\params\overlap-test.bicepparam ===
-WARNING: D:\Development\azure-bicep-cicd-pipeline\infra\params\overlap-test.bicepparam(42,9) : Warning BCP089: The property "destinationaddressPrefix" is not allowed on objects of type "{ name: string, priority: int, access: 'Allow' | 'Deny', protocol: '*' | 'Icmp' | 'Tcp' | 'Udp', sourceAddressPrefix: string, destinationAddressPrefix: string, destinationPortRange: string }". Did you mean "destinationAddressPrefix"? [https://aka.ms/bicep/core-diagnostics#BCP089]
-ERROR: D:\Development\azure-bicep-cicd-pipeline\infra\params\overlap-test.bicepparam(36,7) : Error BCP035: The specified "object" declaration is missing the following required properties: "destinationAddressPrefix". [https://aka.ms/bicep/core-diagnostics#BCP035]
+  VNet 10.40.0.0/16; subnets: snet-app 10.40.1.0/24, snet-data 10.40.1.0/24
+  FAIL  snet-app 10.40.1.0/24 overlaps snet-data 10.40.1.0/24
+Subnet layout check FAILED.
 exit=1
