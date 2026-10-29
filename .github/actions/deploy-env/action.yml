@@ -1,0 +1,92 @@
+# Composite action: deploy the workload to one environment, verify it, and prove the deployment is idempotent.
+# Used by both jobs in deploy.yml, so dev and prod run identical steps. The caller job sets `environment:`,
+# which is what makes GitHub issue the OIDC subject ...:environment:<name> that the federated credential trusts.
+name: Deploy environment
+description: What-if, deploy, verify, and idempotency check for one environment
+
+inputs:
+  environment:
+    description: dev or prod
+    required: true
+  client-id:
+    description: Client ID of the environment's deploy identity (environment secret)
+    required: true
+  tenant-id:
+    description: Tenant ID (repository secret)
+    required: true
+  subscription-id:
+    description: Subscription ID (repository secret)
+    required: true
+  bicep-version:
+    description: Pinned Bicep CLI version
+    required: false
+    default: v0.48.1
+
+runs:
+  using: composite
+  steps:
+    - name: Install pinned Bicep
+      shell: bash
+      env:
+        BICEP_VERSION: ${{ inputs.bicep-version }}
+      run: az bicep install --version "$BICEP_VERSION"
+
+    - name: Azure login (OIDC, deploy identity)
+      uses: azure/login@v3
+      with:
+        client-id: ${{ inputs.client-id }}
+        tenant-id: ${{ inputs.tenant-id }}
+        subscription-id: ${{ inputs.subscription-id }}
+
+    - name: What-if, deploy, verify, idempotency check
+      shell: bash
+      env:
+        ENV_NAME: ${{ inputs.environment }}
+        SUB_ID: ${{ inputs.subscription-id }}
+        RUN_ID: ${{ github.run_number }}-${{ github.run_attempt }}
+        AZURE_CORE_NO_COLOR: 'true'
+        GUID_PATTERN: '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}'
+      run: |
+        set -euo pipefail
+        RG="rg-cicd-$ENV_NAME"
+        ARGS=(--resource-group "$RG" --template-file infra/main.bicep --parameters "infra/params/$ENV_NAME.bicepparam")
+        clean() { sed -E -e "s/$SUB_ID/<subscription>/g" -e "s/$GUID_PATTERN/<guid>/g"; }
+        summary() { echo "$1" >> "$GITHUB_STEP_SUMMARY"; }
+
+        summary "## Deploy: $ENV_NAME"
+
+        echo "::group::1. What-if before deploy (record of intended change)"
+        az deployment group what-if "${ARGS[@]}" --name "whatif-$RUN_ID-$ENV_NAME" | clean | tee before.txt
+        echo "::endgroup::"
+        summary "**What-if before deploy:** $(grep -E '^Resource changes' before.txt || echo 'no changes line')"
+
+        echo "::group::2. Deploy"
+        state=$(az deployment group create "${ARGS[@]}" --name "deploy-$RUN_ID-$ENV_NAME" \
+          --query properties.provisioningState -o tsv)
+        echo "provisioningState=$state"
+        echo "::endgroup::"
+        summary "**Deployment \`deploy-$RUN_ID-$ENV_NAME\`:** $state"
+        [ "$state" = "Succeeded" ] || { echo "::error::Deployment state is $state"; exit 1; }
+
+        echo "::group::3. Verify deployed state (names and settings only)"
+        az resource list -g "$RG" --query "sort_by([].{type:type, name:name}, &type)" -o table | tee resources.txt
+        az network vnet subnet list -g "$RG" --vnet-name "vnet-$ENV_NAME" \
+          --query "[].{subnet:name, prefix:addressPrefix, nsg:networkSecurityGroup.id, routeTable:routeTable.id}" -o json \
+          | jq -r '.[] | "\(.subnet)  \(.prefix)  nsg=\(.nsg | split("/") | last)  rt=\(.routeTable | split("/") | last)"' \
+          | tee subnets.txt
+        echo "::endgroup::"
+        summary '```'
+        summary "$(cat resources.txt subnets.txt | clean)"
+        summary '```'
+
+        echo "::group::4. Idempotency check: what-if after deploy must report no changes"
+        az deployment group what-if "${ARGS[@]}" --name "whatif-after-$RUN_ID-$ENV_NAME" --no-pretty-print -o json > after.json
+        jq -r '.changes[] | "\(.changeType)  \(.resourceId | split("/") | last)"' after.json | tee after.txt
+        changed=$(jq '[.changes[] | select(.changeType != "NoChange" and .changeType != "Ignore")] | length' after.json)
+        echo "::endgroup::"
+        if [ "$changed" -ne 0 ]; then
+          summary "**Idempotency: FAIL.** $changed resource(s) still differ from the code after deploying."
+          echo "::error::Not idempotent: $changed resource(s) would change on a second deployment."
+          exit 1
+        fi
+        summary "**Idempotency: PASS.** What-if after deploy: $(wc -l < after.txt) resources, all NoChange/Ignore."
