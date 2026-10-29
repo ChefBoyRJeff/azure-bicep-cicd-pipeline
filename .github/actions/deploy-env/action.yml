@@ -69,7 +69,8 @@ runs:
         [ "$state" = "Succeeded" ] || { echo "::error::Deployment state is $state"; exit 1; }
 
         echo "::group::3. Verify deployed state (names and settings only)"
-        az resource list -g "$RG" --query "sort_by([].{type:type, name:name}, &type)" -o table | tee resources.txt
+        # (az -o table drops a column named "type", so it is renamed resourceType)
+        az resource list -g "$RG" --query "sort_by([].{resourceType:type, name:name}, &resourceType)" -o table | tee resources.txt
         az network vnet subnet list -g "$RG" --vnet-name "vnet-$ENV_NAME" \
           --query "[].{subnet:name, prefix:addressPrefix, nsg:networkSecurityGroup.id, routeTable:routeTable.id}" -o json \
           | jq -r '.[] | "\(.subnet)  \(.prefix)  nsg=\(.nsg | split("/") | last)  rt=\(.routeTable | split("/") | last)"' \

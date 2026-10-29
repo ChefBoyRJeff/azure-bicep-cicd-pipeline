@@ -63,6 +63,9 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-05-01' = {
         addressSpace
       ]
     }
+    // Azure sets this default on create. Declaring it keeps the code equal to the stored state, so what-if after a
+    // deploy reports NoChange instead of a false "- privateEndpointVNetPolicies" (M3 finding: idempotency check).
+    privateEndpointVNetPolicies: 'Disabled'
     subnets: [
       for (subnet, i) in subnets: {
         name: subnet.name

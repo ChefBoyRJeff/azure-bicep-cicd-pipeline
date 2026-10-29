@@ -1,0 +1,17 @@
+Note: The result may contain false positive predictions (noise).
+You can help us improve the accuracy of the result by opening an issue here: https://aka.ms/WhatIfIssues
+NOTICE! - Want to get What-if without noise? Move to Deployment Stacks What-If https://aka.ms/stackswhatifGA
+
+Resource and property changes are indicated with this symbol:
+  = Nochange
+
+The deployment will update the following scope:
+
+Scope: /subscriptions/<subscription>/resourceGroups/rg-cicd-dev
+
+  = Microsoft.Network/networkSecurityGroups/nsg-dev-snet-app [2024-05-01]
+  = Microsoft.Network/networkSecurityGroups/nsg-dev-snet-data [2024-05-01]
+  = Microsoft.Network/routeTables/rt-dev-workload [2024-05-01]
+  = Microsoft.Network/virtualNetworks/vnet-dev [2024-05-01]
+
+Resource changes: 4 no change.
