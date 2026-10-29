@@ -15,6 +15,9 @@ param environmentName string
 @description('Azure region. Defaults to the resource group region.')
 param location string = resourceGroup().location
 
+@description('Temporary debug switch (M4a: deliberately unused, must fail lint)')
+param enableDebug bool = false
+
 @description('VNet address space. dev 10.40.0.0/16, prod 10.41.0.0/16 (no overlap with other portfolio labs).')
 param addressSpace string
 
