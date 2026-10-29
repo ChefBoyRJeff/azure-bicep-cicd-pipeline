@@ -44,6 +44,12 @@ jobs:
       - name: Lint main.bicep (bicepconfig.json rules)
         run: az bicep lint --file infra/main.bicep
 
+      - name: Subnet layout check (inside VNet, no overlaps)
+        # M4b prevention: an overlapping subnet passes lint, types, and what-if, and only fails at deploy time
+        # (NetcfgSubnetRangesOverlap). This catches it before merge, with no Azure access.
+        shell: pwsh
+        run: ./scripts/Test-SubnetLayout.ps1 -ParamFile infra/params/dev.bicepparam, infra/params/prod.bicepparam
+
       - name: Build parameter files (type checks)
         run: |
           for env in dev prod; do

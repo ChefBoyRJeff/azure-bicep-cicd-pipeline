@@ -1,0 +1,9 @@
+=== Failed operations inside nested deployment network-dev ===
+resource: vnet-dev  (Microsoft.Network/virtualNetworks)
+status:   BadRequest
+error:    NetcfgSubnetRangesOverlap: Subnet 'snet-data' is not valid because its IP address range overlaps with that of an existing subnet in virtual network 'vnet-dev'.
+=== Current dev subnets (did anything change?) ===
+Subnet     Prefix
+---------  ------------
+snet-app   10.40.1.0/24
+snet-data  10.40.2.0/24
