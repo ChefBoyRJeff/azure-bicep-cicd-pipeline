@@ -56,13 +56,31 @@ runs:
         summary "## Deploy: $ENV_NAME"
 
         echo "::group::1. What-if before deploy (record of intended change)"
-        az deployment group what-if "${ARGS[@]}" --name "whatif-$RUN_ID-$ENV_NAME" | clean | tee before.txt
+        az deployment group what-if "${ARGS[@]}" --name "whatif-$RUN_ID-$ENV_NAME" 2>&1 | clean | tee before.txt
         echo "::endgroup::"
         summary "**What-if before deploy:** $(grep -E '^Resource changes' before.txt || echo 'no changes line')"
 
         echo "::group::2. Deploy"
-        state=$(az deployment group create "${ARGS[@]}" --name "deploy-$RUN_ID-$ENV_NAME" \
-          --query properties.provisioningState -o tsv)
+        # stderr goes to a file so the error text can be redacted before printing (M4b: it contained a correlation ID).
+        if ! state=$(az deployment group create "${ARGS[@]}" --name "deploy-$RUN_ID-$ENV_NAME" \
+            --query properties.provisioningState -o tsv 2> deploy-err.txt); then
+          clean < deploy-err.txt | cut -c1-600
+          echo "::endgroup::"
+          # The top-level error only says "At least one resource deployment operation failed". The real cause is on
+          # the failed operation inside the nested module deployment, so print that directly (M4b diagnosis step).
+          echo "::group::Failed operations (root cause)"
+          az deployment operation group list -g "$RG" -n "network-$ENV_NAME" -o json \
+            | jq -r '.[] | select(.properties.provisioningState == "Failed")
+                     | "\(.properties.targetResource.resourceName): \(.properties.statusMessage.error.code): \(.properties.statusMessage.error.message)"' \
+            | clean | tee failed-ops.txt
+          echo "::endgroup::"
+          summary "**Deployment \`deploy-$RUN_ID-$ENV_NAME\`: FAILED**"
+          summary '```'
+          summary "$(cat failed-ops.txt)"
+          summary '```'
+          echo "::error::Deployment failed: $(head -n1 failed-ops.txt)"
+          exit 1
+        fi
         echo "provisioningState=$state"
         echo "::endgroup::"
         summary "**Deployment \`deploy-$RUN_ID-$ENV_NAME\`:** $state"

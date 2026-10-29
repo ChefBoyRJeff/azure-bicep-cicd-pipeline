@@ -1,0 +1,1 @@
+ERROR: D:\Development\azure-bicep-cicd-pipeline\infra\main.bicep(19,7) : Error no-unused-params: Parameter "enableDebug" is declared but never used. [https://aka.ms/bicep/linter-diagnostics#no-unused-params]

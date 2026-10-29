@@ -1,0 +1,20 @@
+=== Real parameter files (expect PASS) ===
+=== infra\params\dev.bicepparam ===
+  VNet 10.40.0.0/16; subnets: snet-app 10.40.1.0/24, snet-data 10.40.2.0/24
+  PASS  all subnets inside the VNet, no overlaps
+=== infra\params\prod.bicepparam ===
+  VNet 10.41.0.0/16; subnets: snet-app 10.41.1.0/24, snet-data 10.41.2.0/24
+  PASS  all subnets inside the VNet, no overlaps
+Subnet layout check passed.
+exit=0
+=== M4b copy-paste error replayed in a temporary file (expect FAIL on overlap) ===
+  temp file: addressPrefix: '10.40.1.0/24'
+  temp file: destinationAddressPrefix: '10.40.1.0/24'
+  temp file: addressPrefix: '10.40.1.0/24'
+  temp file: sourceAddressPrefix: '10.40.1.0/24'
+  temp file: destinationAddressPrefix: '10.40.2.0/24'
+=== infra\params\overlap-test.bicepparam ===
+  VNet 10.40.0.0/16; subnets: snet-app 10.40.1.0/24, snet-data 10.40.1.0/24
+  FAIL  snet-app 10.40.1.0/24 overlaps snet-data 10.40.1.0/24
+Subnet layout check FAILED.
+exit=1

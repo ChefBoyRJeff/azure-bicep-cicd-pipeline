@@ -1,0 +1,34 @@
+M3: deploy workflow run #2 (run 40963842191), after merging PR #3 (idempotency fix). Copied from the job summaries.
+Flow: push to main -> Deploy dev (automatic) -> Deploy prod (waited for required reviewer; approved by ChefBoyRJeff) -> Deploy prod.
+Run #1 (40961598636, PR #2 merge): dev deployment Succeeded but the idempotency check FAILED (vnet-dev: - privateEndpointVNetPolicies);
+prod never started (needs: dev). See m3-01 (before fix) and m3-02 (after fix).
+
+=== Deploy: dev (second deployment of existing resources) ===
+What-if before deploy: Resource changes: 4 no change.
+Deployment deploy-2-1-dev: Succeeded
+
+ResourceType                             Name
+---------------------------------------  -----------------
+Microsoft.Network/networkSecurityGroups  nsg-dev-snet-data
+Microsoft.Network/networkSecurityGroups  nsg-dev-snet-app
+Microsoft.Network/routeTables            rt-dev-workload
+Microsoft.Network/virtualNetworks        vnet-dev
+snet-app  10.40.1.0/24  nsg=nsg-dev-snet-app  rt=rt-dev-workload
+snet-data  10.40.2.0/24  nsg=nsg-dev-snet-data  rt=rt-dev-workload
+
+Idempotency: PASS. What-if after deploy: 4 resources, all NoChange/Ignore.
+
+=== Deploy: prod (first deployment, after approval) ===
+What-if before deploy: Resource changes: 4 to create.
+Deployment deploy-2-1-prod: Succeeded
+
+ResourceType                             Name
+---------------------------------------  ------------------
+Microsoft.Network/networkSecurityGroups  nsg-prod-snet-data
+Microsoft.Network/networkSecurityGroups  nsg-prod-snet-app
+Microsoft.Network/routeTables            rt-prod-workload
+Microsoft.Network/virtualNetworks        vnet-prod
+snet-app  10.41.1.0/24  nsg=nsg-prod-snet-app  rt=rt-prod-workload
+snet-data  10.41.2.0/24  nsg=nsg-prod-snet-data  rt=rt-prod-workload
+
+Idempotency: PASS. What-if after deploy: 4 resources, all NoChange/Ignore.
