@@ -1,0 +1,57 @@
+# Deploy on merge: dev automatically, then prod after a required reviewer approves.
+# Each job runs in a GitHub environment. The environment does three things:
+#   1. Provides that environment's secret AZURE_CLIENT_ID (its own deploy identity).
+#   2. Makes the OIDC subject ...:environment:<name>, which only that identity's federated credential trusts.
+#   3. Enforces protection rules: prod waits for approval, and both accept deployments from main only.
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:        # manual re-run from main (used for the idempotency test)
+
+permissions:
+  contents: read
+
+# Never cancel a deployment halfway; queue the next one instead.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  dev:
+    name: Deploy dev
+    runs-on: ubuntu-latest
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/deploy-env
+        with:
+          environment: dev
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+  prod:
+    name: Deploy prod
+    needs: dev                # prod only after dev succeeded (including its idempotency check)
+    runs-on: ubuntu-latest
+    environment: prod         # required reviewer: the job waits here for approval
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/deploy-env
+        with:
+          environment: prod
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}

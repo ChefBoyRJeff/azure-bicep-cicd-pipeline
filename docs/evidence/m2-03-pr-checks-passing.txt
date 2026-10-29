@@ -1,0 +1,297 @@
+M2: PR #1 checks passing (run 40958023819). Copied from the run's job summaries; sanitized by the workflow (<subscription>, <guid>).
+Checks: Lint and build PASS | What-if (dev) PASS | What-if (prod) PASS | Guardrail PASS
+
+=== Guardrail ===
+Guardrail: PASS. The PR identity was refused (no deployments/write permission) when it tried to deploy.
+
+=== What-if: dev ===
+Note: The result may contain false positive predictions (noise).
+You can help us improve the accuracy of the result by opening an issue here: https://aka.ms/WhatIfIssues
+NOTICE! - Want to get What-if without noise? Move to Deployment Stacks What-If https://aka.ms/stackswhatifGA
+
+Resource and property changes are indicated with this symbol:
+  + Create
+
+The deployment will update the following scope:
+
+Scope: /subscriptions/<subscription>/resourceGroups/rg-cicd-dev
+
+  + Microsoft.Network/networkSecurityGroups/nsg-dev-snet-app [2024-05-01]
+
+      apiVersion:       "2024-05-01"
+      id:               "/subscriptions/<subscription>/resourceGroups/rg-cicd-dev/providers/Microsoft.Network/networkSecurityGroups/nsg-dev-snet-app"
+      location:         "eastus"
+      name:             "nsg-dev-snet-app"
+      properties.securityRules: [
+        0:
+
+          name:                                "Allow-HTTPS-From-VNet"
+          properties.access:                   "Allow"
+          properties.destinationAddressPrefix: "10.40.1.0/24"
+          properties.destinationPortRange:     "443"
+          properties.direction:                "Inbound"
+          properties.priority:                 100
+          properties.protocol:                 "Tcp"
+          properties.sourceAddressPrefix:      "VirtualNetwork"
+          properties.sourcePortRange:          "*"
+
+        1:
+
+          name:                                "Deny-VNet-Inbound"
+          properties.access:                   "Deny"
+          properties.destinationAddressPrefix: "*"
+          properties.destinationPortRange:     "*"
+          properties.direction:                "Inbound"
+          properties.priority:                 4000
+          properties.protocol:                 "*"
+          properties.sourceAddressPrefix:      "VirtualNetwork"
+          properties.sourcePortRange:          "*"
+
+      ]
+      tags.costCenter:  "CC-1001"
+      tags.environment: "dev"
+      tags.managedBy:   "github-actions"
+      tags.owner:       "jeff"
+      tags.project:     "azure-bicep-cicd-pipeline"
+      type:             "Microsoft.Network/networkSecurityGroups"
+
+  + Microsoft.Network/networkSecurityGroups/nsg-dev-snet-data [2024-05-01]
+
+      apiVersion:       "2024-05-01"
+      id:               "/subscriptions/<subscription>/resourceGroups/rg-cicd-dev/providers/Microsoft.Network/networkSecurityGroups/nsg-dev-snet-data"
+      location:         "eastus"
+      name:             "nsg-dev-snet-data"
+      properties.securityRules: [
+        0:
+
+          name:                                "Allow-SQL-From-App"
+          properties.access:                   "Allow"
+          properties.destinationAddressPrefix: "10.40.2.0/24"
+          properties.destinationPortRange:     "1433"
+          properties.direction:                "Inbound"
+          properties.priority:                 100
+          properties.protocol:                 "Tcp"
+          properties.sourceAddressPrefix:      "10.40.1.0/24"
+          properties.sourcePortRange:          "*"
+
+        1:
+
+          name:                                "Deny-VNet-Inbound"
+          properties.access:                   "Deny"
+          properties.destinationAddressPrefix: "*"
+          properties.destinationPortRange:     "*"
+          properties.direction:                "Inbound"
+          properties.priority:                 4000
+          properties.protocol:                 "*"
+          properties.sourceAddressPrefix:      "VirtualNetwork"
+          properties.sourcePortRange:          "*"
+
+      ]
+      tags.costCenter:  "CC-1001"
+      tags.environment: "dev"
+      tags.managedBy:   "github-actions"
+      tags.owner:       "jeff"
+      tags.project:     "azure-bicep-cicd-pipeline"
+      type:             "Microsoft.Network/networkSecurityGroups"
+
+  + Microsoft.Network/routeTables/rt-dev-workload [2024-05-01]
+
+      apiVersion:                            "2024-05-01"
+      id:                                    "/subscriptions/<subscription>/resourceGroups/rg-cicd-dev/providers/Microsoft.Network/routeTables/rt-dev-workload"
+      location:                              "eastus"
+      name:                                  "rt-dev-workload"
+      properties.disableBgpRoutePropagation: false
+      properties.routes: [
+        0:
+
+          name:                     "Drop-Blocked-Range"
+          properties.addressPrefix: "10.99.0.0/16"
+          properties.nextHopType:   "None"
+
+      ]
+      tags.costCenter:                       "CC-1001"
+      tags.environment:                      "dev"
+      tags.managedBy:                        "github-actions"
+      tags.owner:                            "jeff"
+      tags.project:                          "azure-bicep-cicd-pipeline"
+      type:                                  "Microsoft.Network/routeTables"
+
+  + Microsoft.Network/virtualNetworks/vnet-dev [2024-05-01]
+
+      apiVersion:               "2024-05-01"
+      id:                       "/subscriptions/<subscription>/resourceGroups/rg-cicd-dev/providers/Microsoft.Network/virtualNetworks/vnet-dev"
+      location:                 "eastus"
+      name:                     "vnet-dev"
+      properties.addressSpace.addressPrefixes: [
+        0: "10.40.0.0/16"
+      ]
+      properties.subnets: [
+        0:
+
+          name:                               "snet-app"
+          properties.addressPrefix:           "10.40.1.0/24"
+          properties.networkSecurityGroup.id: "/subscriptions/<subscription>/resourceGroups/rg-cicd-dev/providers/Microsoft.Network/networkSecurityGroups/nsg-dev-snet-app"
+          properties.routeTable.id:           "/subscriptions/<subscription>/resourceGroups/rg-cicd-dev/providers/Microsoft.Network/routeTables/rt-dev-workload"
+
+        1:
+
+          name:                               "snet-data"
+          properties.addressPrefix:           "10.40.2.0/24"
+          properties.networkSecurityGroup.id: "/subscriptions/<subscription>/resourceGroups/rg-cicd-dev/providers/Microsoft.Network/networkSecurityGroups/nsg-dev-snet-data"
+          properties.routeTable.id:           "/subscriptions/<subscription>/resourceGroups/rg-cicd-dev/providers/Microsoft.Network/routeTables/rt-dev-workload"
+
+      ]
+      tags.costCenter:          "CC-1001"
+      tags.environment:         "dev"
+      tags.managedBy:           "github-actions"
+      tags.owner:               "jeff"
+      tags.project:             "azure-bicep-cicd-pipeline"
+      type:                     "Microsoft.Network/virtualNetworks"
+
+Resource changes: 4 to create.
+
+=== What-if: prod ===
+Note: The result may contain false positive predictions (noise).
+You can help us improve the accuracy of the result by opening an issue here: https://aka.ms/WhatIfIssues
+NOTICE! - Want to get What-if without noise? Move to Deployment Stacks What-If https://aka.ms/stackswhatifGA
+
+Resource and property changes are indicated with this symbol:
+  + Create
+
+The deployment will update the following scope:
+
+Scope: /subscriptions/<subscription>/resourceGroups/rg-cicd-prod
+
+  + Microsoft.Network/networkSecurityGroups/nsg-prod-snet-app [2024-05-01]
+
+      apiVersion:       "2024-05-01"
+      id:               "/subscriptions/<subscription>/resourceGroups/rg-cicd-prod/providers/Microsoft.Network/networkSecurityGroups/nsg-prod-snet-app"
+      location:         "eastus"
+      name:             "nsg-prod-snet-app"
+      properties.securityRules: [
+        0:
+
+          name:                                "Allow-HTTPS-From-VNet"
+          properties.access:                   "Allow"
+          properties.destinationAddressPrefix: "10.41.1.0/24"
+          properties.destinationPortRange:     "443"
+          properties.direction:                "Inbound"
+          properties.priority:                 100
+          properties.protocol:                 "Tcp"
+          properties.sourceAddressPrefix:      "VirtualNetwork"
+          properties.sourcePortRange:          "*"
+
+        1:
+
+          name:                                "Deny-VNet-Inbound"
+          properties.access:                   "Deny"
+          properties.destinationAddressPrefix: "*"
+          properties.destinationPortRange:     "*"
+          properties.direction:                "Inbound"
+          properties.priority:                 4000
+          properties.protocol:                 "*"
+          properties.sourceAddressPrefix:      "VirtualNetwork"
+          properties.sourcePortRange:          "*"
+
+      ]
+      tags.costCenter:  "CC-1001"
+      tags.environment: "prod"
+      tags.managedBy:   "github-actions"
+      tags.owner:       "jeff"
+      tags.project:     "azure-bicep-cicd-pipeline"
+      type:             "Microsoft.Network/networkSecurityGroups"
+
+  + Microsoft.Network/networkSecurityGroups/nsg-prod-snet-data [2024-05-01]
+
+      apiVersion:       "2024-05-01"
+      id:               "/subscriptions/<subscription>/resourceGroups/rg-cicd-prod/providers/Microsoft.Network/networkSecurityGroups/nsg-prod-snet-data"
+      location:         "eastus"
+      name:             "nsg-prod-snet-data"
+      properties.securityRules: [
+        0:
+
+          name:                                "Allow-SQL-From-App"
+          properties.access:                   "Allow"
+          properties.destinationAddressPrefix: "10.41.2.0/24"
+          properties.destinationPortRange:     "1433"
+          properties.direction:                "Inbound"
+          properties.priority:                 100
+          properties.protocol:                 "Tcp"
+          properties.sourceAddressPrefix:      "10.41.1.0/24"
+          properties.sourcePortRange:          "*"
+
+        1:
+
+          name:                                "Deny-VNet-Inbound"
+          properties.access:                   "Deny"
+          properties.destinationAddressPrefix: "*"
+          properties.destinationPortRange:     "*"
+          properties.direction:                "Inbound"
+          properties.priority:                 4000
+          properties.protocol:                 "*"
+          properties.sourceAddressPrefix:      "VirtualNetwork"
+          properties.sourcePortRange:          "*"
+
+      ]
+      tags.costCenter:  "CC-1001"
+      tags.environment: "prod"
+      tags.managedBy:   "github-actions"
+      tags.owner:       "jeff"
+      tags.project:     "azure-bicep-cicd-pipeline"
+      type:             "Microsoft.Network/networkSecurityGroups"
+
+  + Microsoft.Network/routeTables/rt-prod-workload [2024-05-01]
+
+      apiVersion:                            "2024-05-01"
+      id:                                    "/subscriptions/<subscription>/resourceGroups/rg-cicd-prod/providers/Microsoft.Network/routeTables/rt-prod-workload"
+      location:                              "eastus"
+      name:                                  "rt-prod-workload"
+      properties.disableBgpRoutePropagation: false
+      properties.routes: [
+        0:
+
+          name:                     "Drop-Blocked-Range"
+          properties.addressPrefix: "10.99.0.0/16"
+          properties.nextHopType:   "None"
+
+      ]
+      tags.costCenter:                       "CC-1001"
+      tags.environment:                      "prod"
+      tags.managedBy:                        "github-actions"
+      tags.owner:                            "jeff"
+      tags.project:                          "azure-bicep-cicd-pipeline"
+      type:                                  "Microsoft.Network/routeTables"
+
+  + Microsoft.Network/virtualNetworks/vnet-prod [2024-05-01]
+
+      apiVersion:               "2024-05-01"
+      id:                       "/subscriptions/<subscription>/resourceGroups/rg-cicd-prod/providers/Microsoft.Network/virtualNetworks/vnet-prod"
+      location:                 "eastus"
+      name:                     "vnet-prod"
+      properties.addressSpace.addressPrefixes: [
+        0: "10.41.0.0/16"
+      ]
+      properties.subnets: [
+        0:
+
+          name:                               "snet-app"
+          properties.addressPrefix:           "10.41.1.0/24"
+          properties.networkSecurityGroup.id: "/subscriptions/<subscription>/resourceGroups/rg-cicd-prod/providers/Microsoft.Network/networkSecurityGroups/nsg-prod-snet-app"
+          properties.routeTable.id:           "/subscriptions/<subscription>/resourceGroups/rg-cicd-prod/providers/Microsoft.Network/routeTables/rt-prod-workload"
+
+        1:
+
+          name:                               "snet-data"
+          properties.addressPrefix:           "10.41.2.0/24"
+          properties.networkSecurityGroup.id: "/subscriptions/<subscription>/resourceGroups/rg-cicd-prod/providers/Microsoft.Network/networkSecurityGroups/nsg-prod-snet-data"
+          properties.routeTable.id:           "/subscriptions/<subscription>/resourceGroups/rg-cicd-prod/providers/Microsoft.Network/routeTables/rt-prod-workload"
+
+      ]
+      tags.costCenter:          "CC-1001"
+      tags.environment:         "prod"
+      tags.managedBy:           "github-actions"
+      tags.owner:               "jeff"
+      tags.project:             "azure-bicep-cicd-pipeline"
+      type:                     "Microsoft.Network/virtualNetworks"
+
+Resource changes: 4 to create.
