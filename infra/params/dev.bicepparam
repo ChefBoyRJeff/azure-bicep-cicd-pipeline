@@ -31,7 +31,7 @@ param subnets = [
   }
   {
     name: 'snet-data'
-    addressPrefix: '10.40.1.0/24'    // was 10.40.2.0/24: copy-paste error (M4b, deliberate)
+    addressPrefix: '10.40.2.0/24'
     nsgRules: [
       {
         name: 'Allow-SQL-From-App'
