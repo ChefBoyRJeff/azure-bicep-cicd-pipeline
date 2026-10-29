@@ -41,11 +41,11 @@ Developer ── branch ── Pull request ──► Workflow: validate (PR)
 
 | Identity | Federated credential subject | Azure role and scope | Can change resources? |
 |---|---|---|---|
-| `gh-cicd-plan` | `repo:ChefBoyRJeff/azure-bicep-cicd-pipeline:pull_request` | **Custom role** "Bicep What-If Reader": Reader actions + `Microsoft.Resources/deployments/whatIf/action` + `.../validate/action`, on both RGs. What-if runs with `--validation-level ProviderNoRbac` | **No** |
-| `gh-cicd-deploy-dev` | `repo:ChefBoyRJeff/azure-bicep-cicd-pipeline:environment:dev` | Contributor on `rg-cicd-dev` only | Dev only |
-| `gh-cicd-deploy-prod` | `repo:ChefBoyRJeff/azure-bicep-cicd-pipeline:environment:prod` | Contributor on `rg-cicd-prod` only | Prod only |
+| `gh-cicd-plan` | `repo:ChefBoyRJeff@156028335/azure-bicep-cicd-pipeline@1435132927:pull_request` | **Custom role** "Bicep What-If Reader": Reader actions + `Microsoft.Resources/deployments/whatIf/action` + `.../validate/action`, on both RGs. What-if runs with `--validation-level ProviderNoRbac` | **No** |
+| `gh-cicd-deploy-dev` | `repo:ChefBoyRJeff@156028335/azure-bicep-cicd-pipeline@1435132927:environment:dev` | Contributor on `rg-cicd-dev` only | Dev only |
+| `gh-cicd-deploy-prod` | `repo:ChefBoyRJeff@156028335/azure-bicep-cicd-pipeline@1435132927:environment:prod` | Contributor on `rg-cicd-prod` only | Prod only |
 
-**How OIDC works here:** GitHub issues the job a short-lived signed token (issuer `https://token.actions.githubusercontent.com`) whose *subject* names the repo and the trigger (PR or environment). Entra ID trusts that issuer only for the exact subject in the federated credential, and exchanges it for an Azure access token. Nothing long-lived is stored. A workflow in another repo, a fork, or a different trigger gets a different subject and is refused.
+**How OIDC works here:** GitHub issues the job a short-lived signed token (issuer `https://token.actions.githubusercontent.com`) whose *subject* names the repo and the trigger (PR or environment). Entra ID trusts that issuer only for the exact subject in the federated credential, and exchanges it for an Azure access token. Nothing long-lived is stored. **Subject format:** GitHub repositories created after 2026-07-15 use the *immutable* subject format, which adds the permanent owner and repository IDs (`repo:<owner>@<ownerId>/<repo>@<repoId>:...`). The credential must match it exactly. Found the hard way in M2 (RCA-001). A workflow in another repo, a fork, or a different trigger gets a different subject and is refused.
 
 **Why a custom role:** Microsoft documents that what-if needs the same permissions as a deployment, so built-in Reader can't run it. With `ProviderNoRbac`, the permission check is reduced to read access, so a role with Reader plus the two `deployments` actions should be enough. **To verify in M1/M2:** a test that the plan identity can run what-if but **can't** deploy (expect 403).
 
