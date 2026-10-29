@@ -19,6 +19,9 @@ concurrency:
 env:
   BICEP_VERSION: v0.48.1        # same version as local development, so results match
   AZURE_CORE_NO_COLOR: 'true'   # plain-text az output for logs and summaries
+  # Public repo: logs mask secrets, but not other IDs (for example, object IDs in error messages).
+  # Anything printed from az is passed through this pattern first.
+  GUID_PATTERN: '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}'
 
 defaults:
   run:
@@ -87,11 +90,14 @@ jobs:
             --template-file infra/main.bicep \
             --parameters "infra/params/$ENV_NAME.bicepparam" \
             --validation-level ProviderNoRbac > whatif.txt
-          cat whatif.txt
+          # Sanitize before printing anywhere: subscription ID (a secret, masked in logs but not guaranteed in
+          # summaries) and any other GUID.
+          sed -E -e "s/$SUB_ID/<subscription>/g" -e "s/$GUID_PATTERN/<guid>/g" whatif.txt > whatif-clean.txt
+          cat whatif-clean.txt
           {
             echo "## What-if: $ENV_NAME"
             echo '```'
-            sed "s/$SUB_ID/<subscription>/g" whatif.txt   # logs mask secrets; the summary is sanitized explicitly too
+            cat whatif-clean.txt
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -129,15 +135,20 @@ jobs:
             --parameters infra/params/dev.bicepparam 2>&1)
           rc=$?
           set -e
-          echo "$out"
+          # Print only with every GUID redacted: the error text includes the identity's object ID, which logs don't mask.
+          echo "$out" | sed -E "s/$GUID_PATTERN/<guid>/g"
           if [ "$rc" -eq 0 ]; then
             echo "::error::The plan identity deployed successfully. Its role is too broad; fix it before merging."
             exit 1
           fi
-          if echo "$out" | grep -q 'AuthorizationFailed'; then
-            echo "Refused with AuthorizationFailed, as designed."
-            echo "## Guardrail: PASS. The PR identity was refused (AuthorizationFailed) when it tried to deploy." >> "$GITHUB_STEP_SUMMARY"
+          # Azure refuses in one of two ways (M2 finding): during preflight validation, as InvalidTemplateDeployment
+          # containing "Authorization failed for template resource", or at deploy time with code AuthorizationFailed.
+          # Both must name the missing write permission on deployments.
+          if echo "$out" | grep -Eq 'AuthorizationFailed|Authorization failed for template resource' \
+             && echo "$out" | grep -q "does not have permission to perform action 'Microsoft.Resources/deployments/write'"; then
+            echo "Refused: no permission for Microsoft.Resources/deployments/write, as designed."
+            echo "## Guardrail: PASS. The PR identity was refused (no deployments/write permission) when it tried to deploy." >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "::error::The deployment failed, but not with AuthorizationFailed. Check the output above."
+            echo "::error::The deployment failed, but not with an authorization refusal. Check the output above."
             exit 1
           fi

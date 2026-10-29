@@ -29,6 +29,12 @@ param(
   [string]$OutFile,
 
   [string]$Repo = 'ChefBoyRJeff/azure-bicep-cicd-pipeline',
+
+  # GitHub's immutable numeric IDs (public, not secrets). Repositories created after 2026-07-15 send OIDC subjects
+  # in the immutable format repo:<owner>@<ownerId>/<repo>@<repoId>:..., which Entra ID must match exactly.
+  # Shown in the azure/login step's "Federated token details" (subject claim) on any workflow run.
+  [long]$OwnerId = 156028335,
+  [long]$RepoId = 1435132927,
   [string]$Location = 'eastus',
   [string]$RoleFile = (Join-Path $PSScriptRoot '..\identity\bicep-whatif-reader.role.json')
 )
@@ -39,10 +45,13 @@ $ErrorActionPreference = 'Stop'
 $ResourceGroups = @('rg-cicd-dev', 'rg-cicd-prod')
 $CustomRoleName = 'Bicep What-If Reader'
 
+$Owner, $RepoName = $Repo -split '/', 2
+$SubjectPrefix = "repo:${Owner}@${OwnerId}/${RepoName}@${RepoId}"   # immutable subject format
+
 $Identities = @(
-  @{ Name = 'gh-cicd-plan';        CredName = 'github-pull-request'; Subject = "repo:${Repo}:pull_request" }
-  @{ Name = 'gh-cicd-deploy-dev';  CredName = 'github-env-dev';      Subject = "repo:${Repo}:environment:dev" }
-  @{ Name = 'gh-cicd-deploy-prod'; CredName = 'github-env-prod';     Subject = "repo:${Repo}:environment:prod" }
+  @{ Name = 'gh-cicd-plan';        CredName = 'github-pull-request'; Subject = "${SubjectPrefix}:pull_request" }
+  @{ Name = 'gh-cicd-deploy-dev';  CredName = 'github-env-dev';      Subject = "${SubjectPrefix}:environment:dev" }
+  @{ Name = 'gh-cicd-deploy-prod'; CredName = 'github-env-prod';     Subject = "${SubjectPrefix}:environment:prod" }
 )
 
 $Assignments = @(
@@ -128,8 +137,15 @@ function Step4-FederatedCredentials {
   foreach ($id in $Identities) {
     $appId = Get-AppId $id.Name
     if (-not $appId) { throw "App $($id.Name) not found. Run step 3 first." }
-    $subjects = @(Invoke-Az ad app federated-credential list --id $appId --query '[].subject' -o tsv)
-    if ($subjects -contains $id.Subject) { Log "  exists   $($id.Name)  <-  $($id.Subject)"; continue }
+    $existing = @((Invoke-Az ad app federated-credential list --id $appId -o json) -join "`n" | ConvertFrom-Json)
+
+    # Reconcile: remove any credential whose subject isn't the expected one (for example, an old name-based
+    # subject). A stale trust is a security gap (subject recycling) and blocks reuse of the credential name.
+    foreach ($c in $existing | Where-Object { $_.subject -ne $id.Subject }) {
+      Invoke-Az ad app federated-credential delete --id $appId --federated-credential-id $c.id -o none
+      Log "  removed  $($id.Name)  <-  $($c.subject)"
+    }
+    if ($existing.subject -contains $id.Subject) { Log "  exists   $($id.Name)  <-  $($id.Subject)"; continue }
     $body = @{
       name        = $id.CredName
       issuer      = 'https://token.actions.githubusercontent.com'
