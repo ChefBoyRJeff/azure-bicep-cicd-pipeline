@@ -1,0 +1,16 @@
+M4: deploy workflow run #5 (run 40969198479), after merging PR #7 (prevention). Copied from the job summaries.
+Shows the pipeline healthy end to end after the M4b failure (run #3), the revert (PR #6), and the prevention change (PR #7).
+
+=== Deploy: dev ===
+What-if before deploy: Resource changes: 4 no change.
+Deployment deploy-5-1-dev: Succeeded
+snet-app  10.40.1.0/24  nsg=nsg-dev-snet-app  rt=rt-dev-workload
+snet-data  10.40.2.0/24  nsg=nsg-dev-snet-data  rt=rt-dev-workload
+Idempotency: PASS. What-if after deploy: 4 resources, all NoChange/Ignore.
+
+=== Deploy: prod (after approval) ===
+What-if before deploy: Resource changes: 4 no change.
+Deployment deploy-5-1-prod: Succeeded
+snet-app  10.41.1.0/24  nsg=nsg-prod-snet-app  rt=rt-prod-workload
+snet-data  10.41.2.0/24  nsg=nsg-prod-snet-data  rt=rt-prod-workload
+Idempotency: PASS. What-if after deploy: 4 resources, all NoChange/Ignore.
