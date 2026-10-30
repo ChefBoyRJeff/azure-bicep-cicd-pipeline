@@ -1,0 +1,8 @@
+# Line endings: store and check out text files with LF on every OS.
+# Bicep, YAML, bash, and PowerShell 7 all accept LF; this removes Git's "LF will be replaced by CRLF" warnings
+# and keeps diffs free of line-ending noise between Windows (local) and Linux (GitHub runners).
+* text=auto eol=lf
+
+# Binary files: never convert.
+*.png binary
+*.jpg binary

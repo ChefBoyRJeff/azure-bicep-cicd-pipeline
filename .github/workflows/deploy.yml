@@ -8,7 +8,15 @@ name: deploy
 on:
   push:
     branches: [main]
-  workflow_dispatch:        # manual re-run from main (used for the idempotency test)
+    # Deploy only when something that affects Azure changes. Docs and evidence merges used to trigger a full
+    # deployment and a prod approval request with nothing to approve (approval fatigue, found in M4).
+    # The PR checks in validate.yml still run on every PR; this only limits what deploys after merge.
+    paths:
+      - 'infra/**'
+      - 'bicepconfig.json'
+      - '.github/workflows/deploy.yml'
+      - '.github/actions/deploy-env/**'
+  workflow_dispatch:        # manual run from main (re-deploy or drift check on demand)
 
 permissions:
   contents: read
