@@ -1,6 +1,6 @@
 # Project 3 Plan: Automated Bicep Deployment Pipeline
 
-**Status:** Plan approved 2026-10-26. Nothing deployed yet.
+**Status:** Plan approved 2026-10-26; **completed 2026-10-30 (M0–M5).** This is the original plan, kept as written apart from the immutable OIDC subjects (RCA-001). Results, deviations, and findings are in the [README](../README.md) and the [RCAs](rca/).
 
 ## Business Problem
 
